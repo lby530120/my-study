@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!-- 提供方应用信息，用于计算依赖关系 -->
+    <dubbo:application name="compute-service" />
+    <!-- <dubbo:parameter key="shutdown.timeout" value="60000" />  --><!-- 单位毫秒 -->
+    <!--shutdown.timeout:   设置优雅停机超时时间，缺省超时时间是10秒：(超时则强制关闭) -->
+
+    <!-- 注册中心服务地址 -->
+    <dubbo:registry id="zookeeper" protocol="zookeeper" address="${dubbo.registry.address}" />
+
+    <!-- 用dubbo协议在30001 -->
+    <dubbo:protocol name="dubbo" port="30001" dispather="all" threadpool="cached" threads="5000" />
+    <!--线程模型
+       Dispatcher:  all 所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等。
+       ThreadPool: cached 缓存线程池，空闲一分钟自动删除，需要时重建。
+       threads: 线程池最大数量
+       lazy:  延迟连接，用于减少长连接数，当有调用发起时，再创建长连接。
+      -->
+      <!-- 不同服务在性能上适用不同协议进行传输，比如大数据用短连接协议，小数据大并发用长连接协议 -->
+      <dubbo:protocol name="rmi" port="1099" />
+
+    <!-- 声明需要暴露的服务接口 -->
+    <dubbo:service interface="com.didispace.service.ComputeService" ref="computeService"
+                   version="1.0" registry="zookeeper" owner="liYangBin" protocol="dubbo" executes="10"/>
+     <!--registry: 注册中心, 服务可以有多注册中心，通过逗号分开值，也可以不同服务使用不同注册中心 -->
+     <!--executes: 服务器端并发执行（或占用线程池线程数）不能超过10个  -->
+     <!--actives: 每客户端并发执行（或占用连接的请求数）不能超过10个  -->
+
+    <!-- 具体服务接口的实现 -->
+    <bean id="computeService" class="com.didispace.service.impl.ComputeServiceImpl" />
+
+</beans>
